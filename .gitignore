@@ -1,2 +1,19 @@
+# Ignore environment files
 .env
+.env.*
+
+# Ignore local data volumes
+n8n_storage/
+postgres_storage/
+ollama_storage/
+qdrant_storage/
+
+# Ignore shared folder data
+shared/
+
+# Ignore OS / editor cruft
+.DS_Store
+Thumbs.db
+
+# Ignore My Personal Notes
 NOTES__-__local-n8n-setup-w-dckr-postgre.md
