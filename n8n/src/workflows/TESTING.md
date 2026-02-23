@@ -323,4 +323,4 @@ After completing manual testing:
 2. Update price parsing patterns if needed
 3. Consider adding retry logic for transient failures
 4. Monitor ScraperAPI usage to avoid rate limits
-5. Create a PR with test results following `.ai/pr-template.md`
+5. Create a PR with test results following `.github/pull_request_template.md`

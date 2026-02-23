@@ -298,7 +298,7 @@ To modify this workflow:
 2. Export the workflow JSON
 3. Update this README if needed
 4. Run all tests from TESTING.md
-5. Create PR following `.ai/pr-template.md`
+5. Create PR following `.github/pull_request_template.md`
 
 ## Support
 
