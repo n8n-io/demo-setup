@@ -1,0 +1,249 @@
+{
+  "createdAt": "2026-02-18T10:00:00.000Z",
+  "updatedAt": "2026-02-18T10:00:00.000Z",
+  "id": "priceComparisonFlow",
+  "name": "Price Comparison Workflow",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "chat-trigger-node",
+      "name": "Chat Trigger",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1,
+      "position": [400, 300],
+      "webhookId": "price-comparison-chat-webhook"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Validate input and prepare for processing\nconst items = $input.all();\nconst output = [];\n\nfor (const item of items) {\n  const chatInput = item.json.chatInput || item.json.product || '';\n  const product = chatInput.trim();\n  \n  if (!product) {\n    throw new Error('Product name is required. Please provide a valid product name.');\n  }\n  \n  output.push({\n    json: {\n      product: product,\n      productEncoded: encodeURIComponent(product),\n      timestamp: new Date().toISOString()\n    }\n  });\n}\n\nreturn output;"
+      },
+      "id": "validate-input-node",
+      "name": "Validate Input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [600, 300]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.scraperapi.com",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpQueryAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "url",
+              "value": "=https://www.amazon.in/s?k={{ $json.productEncoded }}"
+            },
+            {
+              "name": "render",
+              "value": "true"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "fullResponse": false,
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "id": "amazon-http-node",
+      "name": "Query Amazon",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [800, 200],
+      "continueOnFail": true,
+      "credentials": {
+        "httpQueryAuth": {
+          "id": "scraperApiCredentials",
+          "name": "ScraperAPI Service"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://api.scraperapi.com",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpQueryAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "url",
+              "value": "=https://www.flipkart.com/search?q={{ $json.productEncoded }}"
+            },
+            {
+              "name": "render",
+              "value": "true"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "fullResponse": false,
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "id": "flipkart-http-node",
+      "name": "Query Flipkart",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [800, 400],
+      "continueOnFail": true,
+      "credentials": {
+        "httpQueryAuth": {
+          "id": "scraperApiCredentials",
+          "name": "ScraperAPI Service"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Parse Amazon response and extract price\nconst items = $input.all();\nconst output = [];\n\nfor (const item of items) {\n  let result = {\n    site: 'Amazon',\n    currency: 'INR',\n    price: null,\n    status: 'error',\n    productSearched: item.json.product || 'Unknown'\n  };\n  \n  try {\n    // Check if request failed\n    if (item.error) {\n      result.status = 'error';\n      result.error_message = item.error.message || 'API request failed';\n      output.push({ json: result });\n      continue;\n    }\n    \n    const html = item.json.data || item.json;\n    \n    if (!html || typeof html !== 'string') {\n      result.status = 'parse_error';\n      result.error_message = 'Invalid HTML response';\n      output.push({ json: result });\n      continue;\n    }\n    \n    // Multiple price patterns for Amazon India\n    const pricePatterns = [\n      /<span class=\"a-price-whole\">([\\d,]+)<\\/span>/,\n      /\"priceAmount\":([\\d.]+)/,\n      /<span class=\"a-price\">.*?₹([\\d,]+)/,\n      /data-a-color=\"price\">.*?₹([\\d,]+)/\n    ];\n    \n    let priceFound = false;\n    for (const pattern of pricePatterns) {\n      const match = html.match(pattern);\n      if (match && match[1]) {\n        const priceStr = match[1].replace(/,/g, '');\n        const price = parseFloat(priceStr);\n        \n        if (!isNaN(price) && price > 0) {\n          result.price = Math.round(price);\n          result.status = 'success';\n          priceFound = true;\n          break;\n        }\n      }\n    }\n    \n    if (!priceFound) {\n      result.status = 'not_found';\n      result.error_message = 'Product or price not found on Amazon';\n    }\n    \n  } catch (error) {\n    result.status = 'parse_error';\n    result.error_message = error.message;\n  }\n  \n  output.push({ json: result });\n}\n\nreturn output;"
+      },
+      "id": "parse-amazon-node",
+      "name": "Parse Amazon",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1000, 200]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Parse Flipkart response and extract price\nconst items = $input.all();\nconst output = [];\n\nfor (const item of items) {\n  let result = {\n    site: 'Flipkart',\n    currency: 'INR',\n    price: null,\n    status: 'error',\n    productSearched: item.json.product || 'Unknown'\n  };\n  \n  try {\n    // Check if request failed\n    if (item.error) {\n      result.status = 'error';\n      result.error_message = item.error.message || 'API request failed';\n      output.push({ json: result });\n      continue;\n    }\n    \n    const html = item.json.data || item.json;\n    \n    if (!html || typeof html !== 'string') {\n      result.status = 'parse_error';\n      result.error_message = 'Invalid HTML response';\n      output.push({ json: result });\n      continue;\n    }\n    \n    // Multiple price patterns for Flipkart\n    const pricePatterns = [\n      /<div class=\"[^\"]*_30jeq3[^\"]*\">₹([\\d,]+)<\\/div>/,\n      /\"price\":\"₹([\\d,]+)\"/,\n      /<div class=\"_25b18c\">₹([\\d,]+)<\\/div>/,\n      /₹([\\d,]+)<\\/div>/,\n      /\"amount\":(\\d+)/\n    ];\n    \n    let priceFound = false;\n    for (const pattern of pricePatterns) {\n      const match = html.match(pattern);\n      if (match && match[1]) {\n        const priceStr = match[1].replace(/,/g, '');\n        const price = parseFloat(priceStr);\n        \n        if (!isNaN(price) && price > 0) {\n          result.price = Math.round(price);\n          result.status = 'success';\n          priceFound = true;\n          break;\n        }\n      }\n    }\n    \n    if (!priceFound) {\n      result.status = 'not_found';\n      result.error_message = 'Product or price not found on Flipkart';\n    }\n    \n  } catch (error) {\n    result.status = 'parse_error';\n    result.error_message = error.message;\n  }\n  \n  output.push({ json: result });\n}\n\nreturn output;"
+      },
+      "id": "parse-flipkart-node",
+      "name": "Parse Flipkart",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1000, 400]
+    },
+    {
+      "parameters": {
+        "mode": "multiplex"
+      },
+      "id": "merge-results-node",
+      "name": "Merge Results",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [1200, 300]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Format final output with consolidated results\nconst items = $input.all();\nconst results = [];\nlet productName = 'Unknown';\n\nfor (const item of items) {\n  if (item.json.site) {\n    results.push({\n      site: item.json.site,\n      price: item.json.price,\n      currency: item.json.currency || 'INR',\n      status: item.json.status,\n      ...(item.json.error_message && { error_message: item.json.error_message })\n    });\n    \n    if (item.json.productSearched) {\n      productName = item.json.productSearched;\n    }\n  }\n}\n\nconst sourcesQueried = results.length;\nconst sourcesSucceeded = results.filter(r => r.status === 'success').length;\n\nconst output = {\n  product: productName,\n  results: results,\n  sources_queried: sourcesQueried,\n  sources_succeeded: sourcesSucceeded,\n  timestamp: new Date().toISOString()\n};\n\n// Add summary message\nif (sourcesSucceeded === 0) {\n  output.message = 'No prices found. All sources failed or product not found.';\n} else if (sourcesSucceeded < sourcesQueried) {\n  output.message = `Partial results: ${sourcesSucceeded} out of ${sourcesQueried} sources returned prices.`;\n} else {\n  output.message = 'Successfully retrieved prices from all sources.';\n}\n\nreturn [{ json: output }];"
+      },
+      "id": "format-output-node",
+      "name": "Format Output",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1400, 300]
+    }
+  ],
+  "connections": {
+    "Chat Trigger": {
+      "main": [
+        [
+          {
+            "node": "Validate Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Input": {
+      "main": [
+        [
+          {
+            "node": "Query Amazon",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Query Flipkart",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Query Amazon": {
+      "main": [
+        [
+          {
+            "node": "Parse Amazon",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Query Flipkart": {
+      "main": [
+        [
+          {
+            "node": "Parse Flipkart",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Amazon": {
+      "main": [
+        [
+          {
+            "node": "Merge Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Flipkart": {
+      "main": [
+        [
+          {
+            "node": "Merge Results",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Results": {
+      "main": [
+        [
+          {
+            "node": "Format Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "price-comparison-v1",
+  "triggerCount": 0,
+  "tags": []
+}
