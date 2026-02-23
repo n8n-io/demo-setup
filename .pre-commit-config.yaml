@@ -1,0 +1,59 @@
+# Pre-commit hooks for governance enforcement
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      - id: check-yaml
+        name: Validate YAML files
+      - id: check-json
+        name: Validate JSON files
+      - id: check-merge-conflict
+        name: Check for merge conflict markers
+      - id: end-of-file-fixer
+        name: Fix end of files
+      - id: trailing-whitespace
+        name: Remove trailing whitespace
+      - id: detect-private-key
+        name: Detect private keys
+      
+  - repo: local
+    hooks:
+      - id: docker-version-check
+        name: Check Docker version pinning
+        entry: bash -c '
+          if grep -q ":latest\|image:.*[^:v0-9]$" docker-compose.yml 2>/dev/null; then
+            echo "❌ Found unpinned Docker images in docker-compose.yml"
+            echo "Per docker-rules.mdc: Pin all image versions, never use latest"
+            grep -n ":latest\|image:.*[^:v0-9]$" docker-compose.yml
+            exit 1
+          fi'
+        language: system
+        files: docker-compose\.ya?ml$
+        
+      - id: required-files-check
+        name: Check required repository files
+        entry: bash -c '
+          required=("README.md" "CONTRIBUTING.md" "ARCHITECTURE.md" "SECURITY.md" "RUNBOOK.md" ".env.example")
+          missing=()
+          for file in "${required[@]}"; do
+            [[ ! -f "$file" ]] && missing+=("$file")
+          done
+          if [[ ${#missing[@]} -gt 0 ]]; then
+            echo "❌ Missing required files: ${missing[*]}"
+            echo "Per common-coding-standards.mdc: All repos must contain these files"
+            exit 1
+          fi'
+        language: system
+        always_run: true
+        pass_filenames: false
+        
+      - id: secrets-check
+        name: Basic secrets detection
+        entry: bash -c '
+          if grep -r -E "(password|secret|key|token).*[:=].*[a-zA-Z0-9]{8,}" --include="*.yml" --include="*.yaml" --include="*.json" . 2>/dev/null | grep -v ".env.example"; then
+            echo "❌ Potential secrets detected"
+            echo "Per security-rules.mdc: No secrets in code"
+            exit 1
+          fi'
+        language: system
+        exclude: ^\.env\.example$

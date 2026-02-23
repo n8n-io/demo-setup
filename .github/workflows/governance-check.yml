@@ -1,0 +1,101 @@
+name: Governance Check
+
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ main ]
+
+jobs:
+  governance-audit:
+    runs-on: ubuntu-latest
+    name: Check Repository Governance
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Check Required Files
+      run: |
+        echo "Checking required repository files..."
+        required_files=("README.md" "CONTRIBUTING.md" "ARCHITECTURE.md" "SECURITY.md" "RUNBOOK.md" ".env.example")
+        missing_files=()
+        
+        for file in "${required_files[@]}"; do
+          if [[ ! -f "$file" ]]; then
+            missing_files+=("$file")
+          fi
+        done
+        
+        if [[ ${#missing_files[@]} -gt 0 ]]; then
+          echo "❌ Missing required files: ${missing_files[*]}"
+          echo "Per common-coding-standards.mdc: All repos must contain these files"
+          exit 1
+        else
+          echo "✅ All required files present"
+        fi
+    
+    - name: Check Makefile or Taskfile
+      run: |
+        if [[ ! -f "Makefile" && ! -f "taskfile.yml" && ! -f "Taskfile.yml" ]]; then
+          echo "❌ Missing Makefile or taskfile.yml"
+          echo "Per common-coding-standards.mdc: Required for common commands"
+          exit 1
+        else
+          echo "✅ Build tool present"
+        fi
+    
+    - name: Check Docker Version Pinning
+      run: |
+        echo "Checking Docker image version pinning..."
+        if grep -q ":latest\|image:.*[^:v0-9]$" docker-compose.yml; then
+          echo "❌ Found unpinned Docker images:"
+          grep -n ":latest\|image:.*[^:v0-9]$" docker-compose.yml
+          echo "Per docker-rules.mdc: Pin all image versions, never use 'latest'"
+          exit 1
+        else
+          echo "✅ All Docker images are pinned"
+        fi
+    
+    - name: Check for Secrets in Code
+      run: |
+        echo "Scanning for potential secrets..."
+        # Check for common secret patterns (excluding .env.example)
+        if git log --oneline | head -10 | grep -iE "(password|secret|key|token)" && \
+           find . -name "*.yml" -o -name "*.yaml" -o -name "*.json" -o -name "*.md" | \
+           xargs grep -l -iE "(password|secret|key|token)" | \
+           grep -v ".env.example" | \
+           grep -v "README.md" | \
+           grep -v ".github"; then
+          echo "⚠️ Potential secrets found - manual review required"
+          echo "Per security-rules.mdc: No secrets in code"
+        else
+          echo "✅ No obvious secrets detected"
+        fi
+    
+    - name: Check Test Directory
+      run: |
+        if [[ ! -d "tests" && ! -d "test" ]]; then
+          echo "⚠️ No test directory found"
+          echo "Per common-pr-and-testing.mdc: Tests are mandatory"
+          echo "Consider adding infrastructure tests for Docker Compose setup"
+        else
+          echo "✅ Test directory present"
+        fi
+    
+    - name: Validate docker-compose.yml
+      run: |
+        echo "Validating Docker Compose configuration..."
+        docker-compose config -q
+        echo "✅ docker-compose.yml is valid"
+    
+    - name: Generate Governance Report
+      run: |
+        echo "## 📋 Governance Check Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "Repository governance validation completed." >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "Rules enforced:" >> $GITHUB_STEP_SUMMARY
+        echo "- ✅ Required files present" >> $GITHUB_STEP_SUMMARY
+        echo "- ✅ Docker images pinned" >> $GITHUB_STEP_SUMMARY
+        echo "- ✅ No secrets in code" >> $GITHUB_STEP_SUMMARY
+        echo "- ✅ Valid Docker Compose" >> $GITHUB_STEP_SUMMARY

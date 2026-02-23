@@ -1,0 +1,70 @@
+name: Docker Security Scan
+
+on:
+  pull_request:
+    paths:
+      - 'docker-compose.yml'
+      - 'Dockerfile*'
+  schedule:
+    - cron: '0 2 * * 1'  # Weekly scan on Monday at 2 AM
+
+jobs:
+  docker-security:
+    runs-on: ubuntu-latest
+    name: Scan Docker Images for Vulnerabilities
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Extract Image Names
+      id: extract-images
+      run: |
+        # Extract unique image names from docker-compose.yml (excluding variables)
+        images=$(grep "image:" docker-compose.yml | awk '{print $2}' | sort | uniq)
+        echo "Found images:"
+        echo "$images"
+        echo "images<<EOF" >> $GITHUB_OUTPUT
+        echo "$images" >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+    
+    - name: Install Trivy
+      run: |
+        sudo apt-get update
+        sudo apt-get install wget apt-transport-https gnupg lsb-release
+        wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
+        echo "deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main" | sudo tee -a /etc/apt/sources.list.d/trivy.list
+        sudo apt-get update
+        sudo apt-get install trivy
+    
+    - name: Scan Images for Vulnerabilities
+      run: |
+        echo "## 🔍 Docker Security Scan Results" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        # Scan each image (skip if it contains variables)
+        while IFS= read -r image; do
+          if [[ "$image" =~ \$\{.*\} ]]; then
+            echo "⏭️ Skipping $image (contains variables)" >> $GITHUB_STEP_SUMMARY
+            continue
+          fi
+          
+          if [[ -n "$image" ]]; then
+            echo "Scanning $image..."
+            echo "### 📦 $image" >> $GITHUB_STEP_SUMMARY
+            
+            # Run Trivy scan
+            trivy image --severity HIGH,CRITICAL --format table "$image" > scan_result.txt || true
+            
+            if grep -q "Total: 0" scan_result.txt; then
+              echo "✅ No high/critical vulnerabilities found" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "⚠️ Vulnerabilities found:" >> $GITHUB_STEP_SUMMARY
+              echo '```' >> $GITHUB_STEP_SUMMARY
+              cat scan_result.txt >> $GITHUB_STEP_SUMMARY
+              echo '```' >> $GITHUB_STEP_SUMMARY
+            fi
+            echo "" >> $GITHUB_STEP_SUMMARY
+          fi
+        done <<< "${{ steps.extract-images.outputs.images }}"
+        
+        echo "Per security-rules.mdc: Dependencies must be scanned for vulnerabilities"
