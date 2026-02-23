@@ -1,0 +1,30 @@
+---
+description: "Common — Naming, repo structure, commit format"
+alwaysApply: true
+---
+
+# Common — Coding Standards
+
+## Repository Standards
+
+### Required Files
+
+README.md, CONTRIBUTING.md, ARCHITECTURE.md, SECURITY.md, RUNBOOK.md, .env.example, Makefile or taskfile.yml, docker-compose.yml (if applicable).
+
+### Recommended Structure
+
+`/src`, `/tests`, `/docs`, `/scripts`, `/infra` (optional)
+
+## Naming Conventions
+
+- **Files:** Python → snake_case; Config → kebab-case; consistent across repo
+- **Functions:** Descriptive names required; no single-letter names (except loops)
+- **Services:** Pattern `<domain>-<service>`
+
+## Commit Message Standard
+
+```
+<type>: <short description>
+```
+
+Types: feat, fix, refactor, test, chore, docs, security.

@@ -1,0 +1,44 @@
+---
+description: "Common — Debugging protocol, hotfix, rollback"
+alwaysApply: true
+---
+
+# Common — Debugging & Incident Response
+
+## AI Debugging Protocol (7 Steps)
+
+When something breaks:
+
+1. **Reproduce the issue** — confirm the bug exists and is consistent
+2. **Collect logs + traces** — gather observability data (Loki, Tempo, Grafana)
+3. **Identify probable root cause** — analyze the evidence
+4. **Ask AI to patch with minimal change** — smallest fix that resolves the issue
+5. **Add regression test** — proves the bug is fixed and won't recur
+6. **Deploy** — via PR, through CI gates
+7. **Monitor** — verify the fix in production via metrics and logs
+
+### Key Rule
+> Humans debug by reproducing, analyzing, and instructing AI to patch.
+> Humans do NOT write the patch code directly.
+
+## Hotfix Policy
+
+Allowed only when: production broken, business impact high, rollback insufficient.
+Requirements: PR still required, minimum tests required, postmortem within 24–72 hours.
+
+## Rollback Requirements
+
+Every deployment must have:
+- A **rollback mechanism** (revert commit, infrastructure rollback, feature flag)
+- **Rollback instructions documented** in the runbook
+- **Safe rollback verification steps** to confirm the rollback worked
+
+## Postmortem Requirements
+
+Required for any SEV incident, security incident, data loss, or major downtime.
+
+Every postmortem must include:
+- **Root cause** — what happened and why
+- **Fix** — what was done to resolve it
+- **Prevention** — how to prevent recurrence
+- **Action items** — specific tasks with owners and deadlines

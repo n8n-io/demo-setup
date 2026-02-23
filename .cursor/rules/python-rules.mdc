@@ -1,0 +1,43 @@
+---
+description: "Rapidify AI Python Rules — Python-specific coding standards"
+globs: "**/*.py"
+---
+
+# Rapidify AI Python Rules
+
+## Naming
+- Files: `snake_case.py`
+- Functions/methods: `snake_case`
+- Classes: `PascalCase`
+- Constants: `UPPER_SNAKE_CASE`
+- Private members: `_leading_underscore`
+
+## Code Style
+- Use type hints for function signatures
+- Write docstrings for all public functions and classes
+- Keep functions focused — single responsibility
+- Maximum function length: aim for under 50 lines
+
+## Imports
+- Order: stdlib → third-party → local
+- No wildcard imports (`from x import *`)
+- Use absolute imports over relative imports
+- Group imports with blank lines between groups
+
+## Error Handling
+- Use specific exceptions, not bare `except:`
+- Always handle expected error cases
+- Log errors with sufficient context for debugging
+- Never silently swallow exceptions
+
+## Dependencies
+- Pin all dependency versions
+- Use `requirements.txt` or `pyproject.toml`
+- No new packages without approval
+- Prefer stdlib solutions when available
+
+## Testing
+- Use `pytest` as the test framework
+- Place tests in `/tests` directory mirroring source structure
+- Use fixtures for shared setup
+- Mock external services in unit tests

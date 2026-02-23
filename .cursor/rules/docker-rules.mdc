@@ -1,0 +1,40 @@
+---
+description: "Rapidify AI Docker Rules — Docker and container-specific standards"
+globs: "**/Dockerfile,**/docker-compose*.yml,**/docker-compose*.yaml"
+---
+
+# Rapidify AI Docker Rules
+
+## Dockerfile Standards
+- Use official base images only
+- **Pin image versions** — never use `latest` tag
+- Use multi-stage builds to minimize image size
+- Run as non-root user in production containers
+- Place frequently changing layers last (for cache efficiency)
+
+## Docker Compose Standards
+- Keep services minimal and focused
+- Use `.env.example` for documenting required environment variables
+- Never hardcode secrets — use environment variables or secrets management
+- Pin all image versions in compose files
+- Use health checks for all services
+
+## Security
+- No secrets in Dockerfiles or build args
+- No sensitive data in image layers
+- Scan images for vulnerabilities
+- Use read-only file systems where possible
+
+## Configuration
+- Keep `.env.example` up to date with all required variables
+- Document every environment variable with comments
+- Use sensible defaults for non-sensitive configuration
+- Separate development and production compose files when needed
+
+## Networking
+- Define explicit networks for service isolation
+- Do not expose unnecessary ports
+- Use internal networks for service-to-service communication
+
+## Allowed Tooling
+Docker and Docker Compose are approved by default. For new orchestration systems (Kubernetes, Nomad, etc.), explicit approval is required.

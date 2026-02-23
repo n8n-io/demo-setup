@@ -1,0 +1,60 @@
+---
+description: "Rapidify AI Testing Rules — Activated when editing test files"
+globs: "**/tests/**,**/test_*,**/*_test.*,**/*_test_*,**/conftest.py"
+---
+
+# Rapidify AI Testing Rules
+
+## Mandatory Testing Requirements
+
+1. **Unit tests are mandatory** — every feature and bug fix must have unit tests
+2. **Integration tests are mandatory** where applicable (API endpoints, database interactions, external services)
+3. **Every bug fix must include a regression test** — proves the bug is fixed and won't recur
+4. **No "works on my machine" merges** — tests must pass in CI
+
+## What to Test
+
+### Unit Tests
+- Individual functions and methods
+- Edge cases and boundary conditions
+- Error handling paths
+- Input validation
+
+### Integration Tests (Where Applicable)
+- API endpoint behavior
+- Database queries and mutations
+- External service interactions (mocked)
+- Workflow end-to-end paths
+
+### Regression Tests (For Bug Fixes)
+- Reproduce the exact bug scenario
+- Prove the fix resolves it
+- Guard against future regression
+
+## Test Quality Standards
+
+- Tests must be **deterministic** — no flaky tests
+- Tests must be **independent** — no shared mutable state between tests
+- Tests must be **readable** — clear test names that describe the scenario
+- Tests must be **fast** — unit tests should complete in seconds
+
+## Test Naming Convention
+
+Use descriptive names that explain the scenario:
+```
+test_<function_name>_<scenario>_<expected_result>
+```
+
+Examples:
+```
+test_validate_email_with_invalid_format_returns_error
+test_create_user_with_duplicate_email_raises_conflict
+test_calculate_total_with_empty_cart_returns_zero
+```
+
+## Before Submitting
+
+- [ ] All existing tests still pass
+- [ ] New tests cover the change
+- [ ] Edge cases are tested
+- [ ] No hardcoded test data that could break

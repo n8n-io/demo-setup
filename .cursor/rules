@@ -1,7 +1,0 @@
-Read and obey all rules in:
-
-.ai/rules.md
-.ai/ai-behavior.md
-.ai/prompt-template.md
-
-If a request violates these rules, refuse and explain why.

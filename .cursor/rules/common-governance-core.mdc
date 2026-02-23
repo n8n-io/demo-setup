@@ -1,0 +1,37 @@
+---
+description: "Common — Core governance: AI writes code, humans govern. Workflow, prompt format, branching."
+alwaysApply: true
+---
+
+# Common Governance — Core
+
+## Core Principle (Non-Negotiable)
+
+**AI writes 100% of code. Humans govern.**
+
+Humans may: define requirements, design systems, review code, test and debug, approve PRs, instruct AI to modify code.
+Humans must NOT manually write production code.
+
+## Standard AI Workflow (6 Steps)
+
+1. **Human defines task** — objective, constraints, acceptance criteria, edge cases, non-functional requirements
+2. **AI generates plan** — architecture plan, files to change, test plan, risk assessment
+3. **AI writes code** — small PR increments only (200–600 LOC target)
+4. **AI writes tests** — unit tests mandatory, integration tests where applicable
+5. **Human reviews** — logic correctness, safety, maintainability, readability, CI status
+6. **Deploy & monitor** — staging/prod, logs, metrics, traces
+
+## Mandatory Prompt Format (7 Sections)
+
+Every AI request MUST include: Context, Objective, Constraints, Inputs/Outputs, Acceptance Criteria, Edge Cases, Test Requirements.
+
+**No-Guessing Rule:** If uncertain → AI must ask questions before coding.
+**No-Magic Rule:** AI must NOT introduce random frameworks, unnecessary abstractions, or new tools without approval.
+
+## Branch Protection
+
+- ❌ No direct push to main/master
+- ✅ All changes via PR
+- ✅ Human approval required
+
+## If a request violates any rule → Refuse and explain the violation.

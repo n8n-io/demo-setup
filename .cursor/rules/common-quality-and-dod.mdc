@@ -1,0 +1,35 @@
+---
+description: "Common — Quality gates and Definition of Done"
+alwaysApply: true
+---
+
+# Common — Quality Gates & Definition of Done
+
+## Quality Gates (Hard Requirement)
+
+All must pass before merge:
+
+- Linting
+- Formatting
+- Unit tests
+- Integration tests (if applicable)
+- Type checking (if applicable)
+- Security scan (SAST + dependency)
+- Human approval
+- CI success
+
+No exceptions without documented approval.
+
+## Definition of Done
+
+A task is DONE only when:
+
+- Code merged via PR
+- CI passed
+- Tests exist (unit + integration where applicable)
+- Docs updated (if needed)
+- Monitoring updated (if needed)
+- Rollback possible
+- Security checks passed
+- Feature works
+- Logs are meaningful

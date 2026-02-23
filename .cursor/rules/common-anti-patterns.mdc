@@ -1,0 +1,32 @@
+---
+description: "Common — Forbidden anti-patterns"
+alwaysApply: true
+---
+
+# Common — Anti-Patterns (Forbidden)
+
+AI must NOT:
+
+- Write code without tests
+- Introduce dependencies casually
+- Create huge PRs (keep 200–600 lines)
+- Hide complexity behind unnecessary abstractions
+- Use insecure defaults (debug=True, permissive CORS)
+- Log secrets or PII
+- Bypass governance checks or CI gates
+- Create tooling sprawl
+- Guess when requirements are unclear — ask instead
+- Leave TODO/FIXME without a tracking issue
+- Use `eval()` or equivalent dynamic code execution
+- Mix concerns — keep modules focused and cohesive
+- Skip the structured prompt validation
+
+## Exceptions Policy
+
+Allowed only when: risk documented, reason clear, explicit approval, time-bound, follow-up action created.
+
+## Final Rule for AI Agents
+
+Always: follow 7-section prompt, never guess, keep PRs small, always write tests, pass all quality gates, maintain observability, preserve rollback safety, protect secrets and PII, require human approval, maintain full traceability.
+
+## If you are about to violate any pattern above → Stop, explain the risk, and ask for guidance.

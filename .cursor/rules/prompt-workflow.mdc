@@ -1,0 +1,133 @@
+---
+description: "Rapidify AI Prompt Workflow — Structured prompting and templates for AI coding tasks"
+---
+
+# Rapidify AI Prompt Workflow
+
+## The Rapidify Standard Workflow (6 Steps)
+
+### Step 1 — Human defines the task
+Human provides: objective, constraints, acceptance criteria, edge cases, non-functional requirements (security/performance)
+
+### Step 2 — AI generates the plan
+AI must output: architecture plan, files to change, test plan, risk assessment
+
+### Step 3 — AI writes code
+AI implements in small PR-sized increments (200–600 lines)
+
+### Step 4 — AI writes tests
+AI generates: unit tests, integration tests (where applicable)
+
+### Step 5 — Human reviews + approves
+Human checks: logic correctness, safety, maintainability, readability
+
+### Step 6 — Deploy + monitor
+CI passes → deploy to staging/prod → monitor metrics/logs/traces
+
+---
+
+## 7-Section Prompt Format (Required)
+
+Every AI coding request must include these 7 sections. If any section is missing, **ask for clarification before coding**:
+
+1. **Context** — What system or module is being changed?
+2. **Objective** — What must be implemented or fixed?
+3. **Constraints** — Technical, security, performance, or architectural limits
+4. **Inputs / Outputs** — Expected inputs and outputs
+5. **Acceptance Criteria** — Conditions required for the task to be done
+6. **Edge Cases** — Failure modes, unusual scenarios, boundary conditions
+7. **Test Requirements** — Required unit, integration, or regression tests
+
+## The "No Guessing" Rule
+
+- AI must NOT guess when requirements are unclear
+- If uncertain → ask questions before writing code
+- If a section is ambiguous → request clarification
+
+---
+
+## Prompt Templates
+
+### Template A — New Feature (Backend/API)
+
+```
+Context: [system/module being changed]
+Objective: Implement [feature description]
+Constraints: [architecture limits, performance requirements, approved tools only]
+Inputs/Outputs: [API contract, data models, expected responses]
+Acceptance Criteria:
+  - [criterion 1]
+  - [criterion 2]
+Edge Cases: [error scenarios, boundary conditions, concurrent access]
+Test Requirements:
+  - Unit tests for [specific functions]
+  - Integration tests for [API endpoints]
+```
+
+### Template B — Bug Fix
+
+```
+Context: [system where bug occurs]
+Objective: Fix [bug description with reproduction steps]
+Constraints: [minimal change, no side effects, backward compatible]
+Inputs/Outputs: [current broken behavior → expected correct behavior]
+Acceptance Criteria:
+  - Bug no longer reproduces
+  - Existing tests still pass
+  - No regression introduced
+Edge Cases: [related scenarios that must still work]
+Test Requirements:
+  - Regression test proving the fix
+  - Verify edge cases
+```
+
+### Template C — Refactor
+
+```
+Context: [module/code being refactored]
+Objective: Refactor [what and why — readability, performance, maintainability]
+Constraints: [no behavior change, backward compatible, same external API]
+Inputs/Outputs: [before/after architecture, same external contracts]
+Acceptance Criteria:
+  - All existing tests pass unchanged
+  - Code quality improved (measurable)
+  - No new dependencies
+Edge Cases: [ensure all existing edge cases still covered]
+Test Requirements:
+  - Existing test suite passes
+  - Add tests for any uncovered paths discovered
+```
+
+### Template D — Tests Only
+
+```
+Context: [module/function needing tests]
+Objective: Add [unit/integration/regression] tests for [target]
+Constraints: [test framework, no production code changes]
+Inputs/Outputs: [functions under test, expected behaviors]
+Acceptance Criteria:
+  - Coverage increased for target module
+  - All edge cases tested
+  - Tests are deterministic and fast
+Edge Cases: [boundary values, error paths, null/empty inputs]
+Test Requirements:
+  - [specific test scenarios to cover]
+```
+
+### Template E — Security Patch
+
+```
+Context: [system/module with vulnerability]
+Objective: Fix [vulnerability type — XSS, injection, auth bypass, etc.]
+Constraints: [minimal change, no feature changes, backward compatible]
+Inputs/Outputs: [attack vector → blocked, legitimate use → unchanged]
+Acceptance Criteria:
+  - Vulnerability is mitigated
+  - No new attack surface introduced
+  - Existing functionality preserved
+Edge Cases: [alternative attack vectors, bypass attempts]
+Test Requirements:
+  - Test proving vulnerability is fixed
+  - Test proving legitimate use still works
+  - Security scan passes
+```

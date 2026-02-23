@@ -1,0 +1,35 @@
+---
+description: "Common — Security: secrets, PII, license, AI guardrails"
+alwaysApply: true
+---
+
+# Common — Security
+
+## Secrets Policy
+
+**Forbidden:** Secrets in code, logs, PRs, or tickets.
+**Required:** Secrets vault or env vars, secret scanning in git, key rotation schedule. Reference `.env.example` (never `.env`).
+
+## Privacy / PII
+
+Systems handling user data must: mask PII in logs, enforce RBAC, follow retention rules, support deletion requests.
+
+## License Compliance
+
+- Approved licenses only
+- No GPL contamination in proprietary codebases
+- License scanning required
+
+## Security Coding Standards
+
+- Follow **least-privilege** principles in all access controls
+- No insecure defaults (e.g., `debug=True` in production, open CORS)
+- Validate and sanitize all user inputs
+- Use parameterized queries — never string concatenation for SQL
+- Keep dependencies updated and scanned for vulnerabilities
+
+## AI Application Guardrails
+
+All AI/LLM apps must include: prompt injection defense, content filtering (when relevant), model fallback strategy, cost guardrails.
+
+## If you detect a security concern → Flag immediately and suggest a fix.

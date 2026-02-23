@@ -1,0 +1,50 @@
+---
+description: "Repo-specific — Self-hosted AI Starter Kit: n8n, Ollama, Qdrant, Docker stack"
+alwaysApply: true
+---
+
+# Repository-Specific — Self-Hosted AI Starter Kit
+
+## Stack (Approved by Default)
+
+- **n8n** — workflow automation
+- **Ollama** — local LLMs
+- **Qdrant** — vector store
+- **PostgreSQL** — persistence
+- **Docker / Docker Compose** — orchestration
+
+## Tooling Policy
+
+**Allowed:** Docker, Docker Compose, n8n, Ollama, Qdrant, PostgreSQL.
+**Restricted (needs approval):** New databases, new orchestration systems, new frameworks, new auth systems.
+
+## Knowledge Capture
+
+- **ADRs required when:** Architecture changes, new infra patterns, major tool changes
+- **Runbooks required for:** Production services, monitoring alerts, business-critical n8n workflows
+- **Postmortems required for:** SEV incidents, security incidents, data loss, major downtime
+
+## Ownership
+
+Every system must have: owner, backup owner. No orphan services allowed.
+
+## Observability (When Production-Ready)
+
+Every service must emit: Logs → Loki, Metrics → Prometheus/Mimir, Traces → Tempo, Dashboards → Grafana.
+**If it cannot be monitored, it cannot be production.**
+
+## Operating Rhythm
+
+### Weekly
+- Review governance violations
+- Review incidents
+- Review tech debt
+- Review security posture
+
+### Monthly
+- Rotate secrets (as needed)
+- Review model costs
+
+## Repo Context
+
+This is a learning/experimentation platform. Production-grade concerns (reverse proxy, HA, advanced monitoring) are out of scope per CONTRIBUTING.md. Workflows live in `n8n/demo-data/workflows/`. Follow existing structure when adding workflows or config.
