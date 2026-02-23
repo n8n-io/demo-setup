@@ -12,7 +12,7 @@ When something breaks:
 1. **Reproduce the issue** — confirm the bug exists and is consistent
 2. **Collect logs + traces** — gather observability data (Loki, Tempo, Grafana)
 3. **Identify probable root cause** — analyze the evidence
-4. **Ask AI to patch with minimal change** — smallest fix that resolves the issue
+4. **Ask AI to suggest configuration changes** — smallest fix for Docker/n8n issues or workflow node adjustments
 5. **Add regression test** — proves the bug is fixed and won't recur
 6. **Deploy** — via PR, through CI gates
 7. **Monitor** — verify the fix in production via metrics and logs

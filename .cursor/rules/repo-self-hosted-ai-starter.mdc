@@ -28,10 +28,10 @@ alwaysApply: true
 
 Every system must have: owner, backup owner. No orphan services allowed.
 
-## Observability (When Production-Ready)
+## Observability (Optional for Learning Platform)
 
-Every service must emit: Logs → Loki, Metrics → Prometheus/Mimir, Traces → Tempo, Dashboards → Grafana.
-**If it cannot be monitored, it cannot be production.**
+For production deployments, services should emit: Logs → Loki, Metrics → Prometheus/Mimir, Traces → Tempo, Dashboards → Grafana.
+For learning/experimentation: Basic Docker logging and n8n execution logs are sufficient.
 
 ## Operating Rhythm
 

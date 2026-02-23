@@ -1,0 +1,87 @@
+---
+description: "n8n workflow standards — JSON structure, credentials, validation"
+globs: "**/workflows/**/*.json,**/credentials/**/*.json,**/n8n/**"
+alwaysApply: false
+---
+
+# n8n Workflow Standards
+
+## Workflow File Organization
+
+### Structure
+- Workflows in `/n8n/workflows/` or `/n8n/demo-data/workflows/`
+- Credentials in `/n8n/credentials/` or `/n8n/demo-data/credentials/`
+- Supporting docs in same directory as workflows
+
+### File Naming
+- Use descriptive kebab-case filenames: `workflow-name.json`
+- Avoid generic names like `workflow1.json`
+- Include version if multiple variants: `price-comparison-v2.json`
+
+## Workflow JSON Standards
+
+### Export Method
+- Always export from n8n UI (don't manually edit JSON)
+- Use "Download" → "Export workflow" from n8n editor
+- Maintain JSON structure integrity
+
+### Workflow Metadata
+- Include meaningful workflow name (not "My workflow")
+- Add description explaining workflow purpose
+- Use tags for categorization where applicable
+- Set appropriate workflow settings (error workflow, timezone)
+
+### Documentation Requirements
+- Document workflow purpose in README or workflow description
+- List required credentials and their setup
+- Document expected inputs/outputs
+- Include testing instructions
+
+## Credential Management
+
+### Security
+- Never commit actual credential values
+- Use credential placeholders/templates only
+- Reference required credentials in `.env.example` or documentation
+- Export credential structure only (for sharing setup)
+
+### Credential Organization
+- Group related credentials logically
+- Use descriptive credential names
+- Document credential requirements in workflow README
+
+## Workflow Validation
+
+### Before Committing
+- Validate JSON syntax (`jq . workflow.json` or similar)
+- Test workflow execution in n8n UI
+- Verify all required credentials are documented
+- Check for hardcoded values (should use expressions/variables)
+
+### Dependencies
+- Document external service requirements
+- List required n8n node packages
+- Specify minimum n8n version if using newer features
+- Document workflow dependencies on other workflows
+
+## n8n Node Best Practices
+
+### Error Handling
+- Use "Continue on Fail" appropriately
+- Add error workflows for critical processes
+- Include meaningful error messages
+- Handle edge cases gracefully
+
+### Performance
+- Avoid infinite loops in workflow logic
+- Use appropriate node types (avoid overuse of Function nodes)
+- Implement reasonable timeouts for external calls
+- Consider workflow complexity and execution time
+
+## Integration with Docker Stack
+
+### Service Dependencies
+- Workflows requiring Ollama: document model requirements
+- Workflows using Qdrant: document collection setup
+- Workflows needing PostgreSQL: document schema requirements
+- Reference service URLs using environment variables where possible

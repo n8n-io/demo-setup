@@ -9,12 +9,12 @@ alwaysApply: true
 
 All must pass before merge:
 
-- Linting
-- Formatting
-- Unit tests
-- Integration tests (if applicable)
-- Type checking (if applicable)
-- Security scan (SAST + dependency)
+- JSON/YAML validation
+- Docker Compose validation (`docker compose config`)
+- n8n workflow validation (if applicable)
+- Infrastructure tests (service health checks)
+- Security scan (container vulnerability scan)
+- Manual testing (workflow execution where applicable)
 - Human approval
 - CI success
 
@@ -24,12 +24,12 @@ No exceptions without documented approval.
 
 A task is DONE only when:
 
-- Code merged via PR
+- Configuration merged via PR
 - CI passed
-- Tests exist (unit + integration where applicable)
+- Infrastructure tests exist (service validation where applicable)
 - Docs updated (if needed)
-- Monitoring updated (if needed)
+- Services deployable and healthy
 - Rollback possible
 - Security checks passed
-- Feature works
-- Logs are meaningful
+- Workflows/services function correctly
+- Service logs are meaningful

@@ -13,12 +13,14 @@ README.md, CONTRIBUTING.md, ARCHITECTURE.md, SECURITY.md, RUNBOOK.md, .env.examp
 
 ### Recommended Structure
 
-`/src`, `/tests`, `/docs`, `/scripts`, `/infra` (optional)
+`/n8n/workflows/`, `/n8n/credentials/`, `/tests/`, `/docs/`, `/scripts/`
 
 ## Naming Conventions
 
-- **Files:** Python → snake_case; Config → kebab-case; consistent across repo
-- **Functions:** Descriptive names required; no single-letter names (except loops)
+- **n8n workflows:** kebab-case filenames (`workflow-name.json`)
+- **Docker services:** kebab-case names in docker-compose.yml
+- **Config files:** kebab-case (YAML, JSON, etc.)
+- **JSON keys:** camelCase or kebab-case where applicable
 - **Services:** Pattern `<domain>-<service>`
 
 ## Commit Message Standard

@@ -17,7 +17,8 @@ AI must NOT:
 - Create tooling sprawl
 - Guess when requirements are unclear — ask instead
 - Leave TODO/FIXME without a tracking issue
-- Use `eval()` or equivalent dynamic code execution
+- Use `eval()` or equivalent dynamic code execution (applies to scripts)
+- Use Execute Command nodes in n8n without proper validation
 - Mix concerns — keep modules focused and cohesive
 - Skip the structured prompt validation
 

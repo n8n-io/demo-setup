@@ -1,60 +1,112 @@
 ---
-description: "Rapidify AI Testing Rules — Activated when editing test files"
-globs: "**/tests/**,**/test_*,**/*_test.*,**/*_test_*,**/conftest.py"
+description: "Infrastructure Testing Rules — Docker Compose and n8n workflow validation"
+globs: "**/tests/**,**/test_*,**/*_test.*,**/docker-compose*.yml,**/workflows/**"
 ---
 
-# Rapidify AI Testing Rules
+# Infrastructure Testing Rules
 
 ## Mandatory Testing Requirements
 
-1. **Unit tests are mandatory** — every feature and bug fix must have unit tests
-2. **Integration tests are mandatory** where applicable (API endpoints, database interactions, external services)
-3. **Every bug fix must include a regression test** — proves the bug is fixed and won't recur
-4. **No "works on my machine" merges** — tests must pass in CI
+1. **Docker Compose validation is mandatory** — all compose files must be valid
+2. **Service health checks are mandatory** where services have dependencies
+3. **Every infrastructure change must include verification tests**
+4. **No "works on my machine" merges** — infrastructure tests must pass in CI
 
 ## What to Test
 
-### Unit Tests
-- Individual functions and methods
-- Edge cases and boundary conditions
-- Error handling paths
-- Input validation
+### Docker Compose Tests
+- Configuration validation: `docker compose config`
+- Service startup verification
+- Network connectivity between services
+- Volume mounting and persistence
+- Profile-based service startup (cpu, gpu-nvidia, gpu-amd)
 
-### Integration Tests (Where Applicable)
-- API endpoint behavior
-- Database queries and mutations
-- External service interactions (mocked)
-- Workflow end-to-end paths
+### n8n Workflow Tests
+- JSON syntax validation
+- Workflow import capability
+- Credential structure validation
+- Basic workflow execution (manual verification)
 
-### Regression Tests (For Bug Fixes)
-- Reproduce the exact bug scenario
-- Prove the fix resolves it
-- Guard against future regression
+### Integration Tests
+- Service-to-service communication (n8n → Ollama, Qdrant, PostgreSQL)
+- Health endpoint verification
+- Port accessibility
+- Environment variable propagation
+
+### Infrastructure Regression Tests
+- Service startup after configuration changes
+- Workflow import after JSON modifications
+- Volume persistence after container restart
+
+## Test Structure
+
+### Infrastructure Test Organization
+```
+/tests/
+├── docker/
+│   ├── test_compose_validation.sh
+│   ├── test_service_health.sh
+│   └── test_profiles.sh
+├── workflows/
+│   ├── test_workflow_json.sh
+│   └── validate_workflows.py
+└── integration/
+    ├── test_service_connectivity.sh
+    └── test_n8n_integration.sh
+```
 
 ## Test Quality Standards
 
-- Tests must be **deterministic** — no flaky tests
-- Tests must be **independent** — no shared mutable state between tests
-- Tests must be **readable** — clear test names that describe the scenario
-- Tests must be **fast** — unit tests should complete in seconds
+- Tests must be **deterministic** — no flaky container behavior
+- Tests must be **independent** — clean docker state between tests
+- Tests must be **fast** — infrastructure tests should complete in minutes
+- Tests must be **documented** — clear purpose and expected outcomes
 
 ## Test Naming Convention
 
-Use descriptive names that explain the scenario:
+Use descriptive names for test files and functions:
 ```
-test_<function_name>_<scenario>_<expected_result>
+test_<component>_<scenario>_<expected_result>
 ```
 
 Examples:
+```bash
+test_docker_compose_with_cpu_profile_starts_correctly.sh
+test_n8n_workflow_json_validates_successfully.py
+test_ollama_service_health_endpoint_responds.sh
 ```
-test_validate_email_with_invalid_format_returns_error
-test_create_user_with_duplicate_email_raises_conflict
-test_calculate_total_with_empty_cart_returns_zero
+
+## Infrastructure Test Examples
+
+### Docker Compose Validation
+```bash
+# Validate compose file syntax
+docker compose config -q || exit 1
+
+# Test CPU profile startup
+docker compose --profile cpu up -d
+docker compose ps | grep -v "Exit" || exit 1
+docker compose down
+```
+
+### n8n Workflow Validation  
+```python
+import json
+import jsonschema
+
+def test_workflow_json_valid():
+    with open('workflow.json') as f:
+        workflow = json.load(f)
+    # Validate basic n8n workflow structure
+    assert 'nodes' in workflow
+    assert 'connections' in workflow
 ```
 
 ## Before Submitting
 
-- [ ] All existing tests still pass
-- [ ] New tests cover the change
-- [ ] Edge cases are tested
-- [ ] No hardcoded test data that could break
+- [ ] Docker Compose config validates
+- [ ] Services start successfully
+- [ ] Required ports are accessible
+- [ ] n8n workflows import without errors
+- [ ] All profiles tested (if modified)
+- [ ] Integration tests pass

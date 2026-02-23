@@ -1,0 +1,109 @@
+---
+description: "Docker Compose Rules — Enhanced rules for n8n automation repositories"
+globs: "**/docker-compose*.yml,**/docker-compose*.yaml,**/.env.example"
+alwaysApply: false
+---
+
+# Docker Compose Rules for n8n Repositories
+
+## Service Configuration
+
+### Image Versioning
+- Pin all image versions (never use `:latest`)
+- Document version choices in comments
+- Test version compatibility before updating
+- Consider n8n node package compatibility with n8n version
+
+### Service Dependencies
+- Use `depends_on` with health checks for critical dependencies
+- Document service startup order in README
+- Configure appropriate restart policies
+- Use health checks for services that other services depend on
+
+### Profile Management
+- Clearly document profile purposes (cpu, gpu-nvidia, gpu-amd)
+- Test all profiles during development
+- Ensure profile-specific services don't conflict
+- Document hardware requirements for each profile
+
+## Environment Variables
+
+### .env.example Documentation
+- Comment every environment variable with:
+  - Purpose and usage
+  - Example value (safe for commit)
+  - Required vs optional
+  - Default behavior if not set
+
+Example:
+```bash
+# PostgreSQL Configuration
+POSTGRES_USER=root          # Database superuser (change for production)
+POSTGRES_PASSWORD=password  # Database password (REQUIRED - change for production)
+POSTGRES_DB=n8n            # Database name for n8n data
+
+# n8n Security Configuration (REQUIRED - generate secure values)
+N8N_ENCRYPTION_KEY=super-secret-key      # Encryption key for n8n data
+N8N_USER_MANAGEMENT_JWT_SECRET=jwt-key   # JWT signing secret
+```
+
+### Secret Management
+- All secrets via .env file (never in compose file)
+- Reference .env.example for all required variables
+- Use docker secrets for production deployments
+- Rotate secrets regularly (document schedule)
+
+## Volume Management
+
+### Named Volumes
+- Use named volumes for data persistence (not bind mounts)
+- Document volume purposes in compose file comments
+- Plan backup strategy for critical volumes
+- Consider volume permissions and ownership
+
+### n8n Specific Volumes
+- Separate volumes for n8n data, workflows, and credentials
+- Mount shared directory for file operations
+- Document volume backup requirements
+
+## Network Configuration
+
+### Service Networks
+- Use explicit networks for service isolation
+- Document network topology
+- Minimize port exposure (only necessary ports)
+- Use internal networks for service-to-service communication
+
+### Port Management
+- Document all exposed ports and their purposes
+- Avoid port conflicts with common services
+- Use standard ports where possible (n8n: 5678)
+- Consider port mapping for multiple instances
+
+## n8n Integration
+
+### Service Integration
+- Configure n8n database connection properly
+- Set up n8n-to-Ollama connectivity
+- Configure Qdrant integration if used
+- Test service connectivity after startup
+
+### Workflow Data
+- Mount workflow directories consistently
+- Provide workflow import mechanisms
+- Document credential setup process
+- Plan workflow backup and restore
+
+## Validation Requirements
+
+### Pre-deployment Checks
+- Validate compose file: `docker compose config`
+- Test service startup: `docker compose up --dry-run` (if available)
+- Verify all required .env variables are documented
+- Check for security issues (exposed secrets, etc.)
+
+### Health Monitoring
+- Implement health checks for critical services
+- Monitor startup time and resource usage
+- Plan for service failure scenarios
+- Document troubleshooting procedures

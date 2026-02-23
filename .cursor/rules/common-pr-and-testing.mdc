@@ -17,9 +17,10 @@ What changed? (Brief description of the change)
 Why was this change necessary? (Business/technical justification)
 
 ## Testing
-- Unit tests: [describe what's tested]
-- Integration tests: [describe what's tested, or N/A]
-- Manual tests: [any manual verification done]
+- Infrastructure validation: [Docker Compose config, service startup]
+- Workflow validation: [n8n workflow JSON validation, if applicable]
+- Integration tests: [service connectivity, health checks]
+- Manual tests: [workflow execution, UI verification]
 
 ## Risks
 What could break? (Dependencies, side effects, edge cases)

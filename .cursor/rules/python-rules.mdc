@@ -1,9 +1,11 @@
 ---
-description: "Rapidify AI Python Rules — Python-specific coding standards"
-globs: "**/*.py"
+description: "Python Rules — Python-specific coding standards (applies only when Python files exist)"
+globs: "**/*.py,**/scripts/**/*.py,**/tests/**/*.py"
 ---
 
-# Rapidify AI Python Rules
+# Python Rules (Conditional)
+
+**Note:** These rules apply only when Python files exist in the repository. For Docker Compose + n8n repositories, Python is optional.
 
 ## Naming
 - Files: `snake_case.py`
