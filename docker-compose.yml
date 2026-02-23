@@ -8,7 +8,7 @@ networks:
   demo:
 
 x-n8n: &service-n8n
-  image: n8nio/n8n:latest
+  image: n8nio/n8n:2.9.1
   networks: ['demo']
   environment:
     - DB_TYPE=postgresdb
@@ -20,12 +20,10 @@ x-n8n: &service-n8n
     - N8N_ENCRYPTION_KEY
     - N8N_USER_MANAGEMENT_JWT_SECRET
     - OLLAMA_HOST=${OLLAMA_HOST:-ollama:11434}
-  env_file:
-    - path: .env
-      required: true
+  env_file: .env
 
 x-ollama: &service-ollama
-  image: ollama/ollama:latest
+  image: ollama/ollama:0.16.3
   container_name: ollama
   networks: ['demo']
   restart: unless-stopped
@@ -33,9 +31,15 @@ x-ollama: &service-ollama
     - 11434:11434
   volumes:
     - ollama_storage:/root/.ollama
+  healthcheck:
+    test: ['CMD-SHELL', 'ollama list || exit 1']
+    interval: 30s
+    timeout: 10s
+    retries: 3
+    start_period: 30s
 
 x-init-ollama: &init-ollama
-  image: ollama/ollama:latest
+  image: ollama/ollama:0.16.3
   networks: ['demo']
   container_name: ollama-pull-llama
   volumes:
@@ -101,9 +105,15 @@ services:
         condition: service_healthy
       n8n-import:
         condition: service_completed_successfully
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -qO- http://localhost:5678/healthz || exit 1']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
 
   qdrant:
-    image: qdrant/qdrant
+    image: qdrant/qdrant:v1.13.2
     hostname: qdrant
     container_name: qdrant
     networks: ['demo']
@@ -112,6 +122,12 @@ services:
       - 6333:6333
     volumes:
       - qdrant_storage:/qdrant/storage
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -qO- http://localhost:6333/healthz || exit 1']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
 
   ollama-cpu:
     profiles: ["cpu"]
