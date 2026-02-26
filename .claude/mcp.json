@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "ollama": {
+      "command": "node",
+      "args": [
+        "/c/Users/Traxe/self-hosted-ai-starter-kit/.claude/worktrees/vigilant-pascal/mcp-ollama/index.js"
+      ],
+      "env": {
+        "OLLAMA_HOST": "http://localhost:11434"
+      }
+    }
+  }
+}
