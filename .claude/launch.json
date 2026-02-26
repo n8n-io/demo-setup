@@ -1,0 +1,59 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "MCP Ollama Server",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["servers/mcp-ollama/index.js"],
+      "autoPort": true
+    },
+    {
+      "name": "MCP Ollama Server (watch mode)",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["--watch", "servers/mcp-ollama/index.js"],
+      "autoPort": true
+    },
+    {
+      "name": "Docker Compose (CPU - all services)",
+      "runtimeExecutable": "docker-compose",
+      "runtimeArgs": ["--profile", "cpu", "up"],
+      "autoPort": true
+    },
+    {
+      "name": "Docker Compose (CPU - n8n only)",
+      "runtimeExecutable": "docker-compose",
+      "runtimeArgs": ["--profile", "cpu", "up", "n8n", "postgres", "qdrant"],
+      "port": 5678
+    },
+    {
+      "name": "Docker Compose (CPU - Ollama only)",
+      "runtimeExecutable": "docker-compose",
+      "runtimeArgs": ["--profile", "cpu", "up", "ollama-cpu", "ollama-pull-llama-cpu"],
+      "port": 11434
+    },
+    {
+      "name": "Docker Compose (GPU NVIDIA - all)",
+      "runtimeExecutable": "docker-compose",
+      "runtimeArgs": ["--profile", "gpu-nvidia", "up"],
+      "port": null
+    },
+    {
+      "name": "Docker Compose (GPU AMD - all)",
+      "runtimeExecutable": "docker-compose",
+      "runtimeArgs": ["--profile", "gpu-amd", "up"],
+      "port": null
+    },
+    {
+      "name": "n8n (workflow automation)",
+      "runtimeExecutable": "docker-compose",
+      "runtimeArgs": ["up", "n8n", "postgres"],
+      "port": 5678
+    },
+    {
+      "name": "Qdrant (vector database)",
+      "runtimeExecutable": "docker-compose",
+      "runtimeArgs": ["up", "qdrant"],
+      "port": 6333
+    }
+  ]
+}
