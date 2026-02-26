@@ -118,7 +118,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
 
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   try {
-    const { name, arguments: args } = request;
+    const { name, arguments: args } = request.params;
 
     switch (name) {
       case "list_models": {
