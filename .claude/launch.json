@@ -14,6 +14,18 @@
       "autoPort": true
     },
     {
+      "name": "MCP n8n Server",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["servers/mcp-n8n/index.js"],
+      "autoPort": true
+    },
+    {
+      "name": "MCP n8n Server (watch mode)",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["--watch", "servers/mcp-n8n/index.js"],
+      "autoPort": true
+    },
+    {
       "name": "Docker Compose (CPU - all services)",
       "runtimeExecutable": "docker-compose",
       "runtimeArgs": ["--profile", "cpu", "up"],
