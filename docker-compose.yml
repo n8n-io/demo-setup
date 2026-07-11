@@ -1,156 +1,112 @@
-volumes:
-  n8n_storage:
-  postgres_storage:
-  ollama_storage:
-  qdrant_storage:
-
-networks:
-  demo:
-
-x-n8n: &service-n8n
-  image: n8nio/n8n:latest
-  networks: ['demo']
-  environment:
-    - DB_TYPE=postgresdb
-    - DB_POSTGRESDB_HOST=postgres
-    - DB_POSTGRESDB_USER=${POSTGRES_USER}
-    - DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD}
-    - N8N_DIAGNOSTICS_ENABLED=false
-    - N8N_PERSONALIZATION_ENABLED=false
-    - N8N_ENCRYPTION_KEY
-    - N8N_USER_MANAGEMENT_JWT_SECRET
-    - OLLAMA_HOST=${OLLAMA_HOST:-ollama:11434}
-  env_file:
-    - path: .env
-      required: true
-
-x-ollama: &service-ollama
-  image: ollama/ollama:latest
-  container_name: ollama
-  networks: ['demo']
-  restart: unless-stopped
-  ports:
-    - 11434:11434
-  volumes:
-    - ollama_storage:/root/.ollama
-
-x-init-ollama: &init-ollama
-  image: ollama/ollama:latest
-  networks: ['demo']
-  container_name: ollama-pull-llama
-  volumes:
-    - ollama_storage:/root/.ollama
-  entrypoint: /bin/sh
-  environment:
-    - OLLAMA_HOST=ollama:11434
-  command:
-    - "-c"
-    - "sleep 3; ollama pull llama3.2"
+version: '3.8'
 
 services:
-  postgres:
-    image: postgres:16-alpine
-    hostname: postgres
-    networks: ['demo']
-    restart: unless-stopped
-    environment:
-      - POSTGRES_USER
-      - POSTGRES_PASSWORD
-      - POSTGRES_DB
-    volumes:
-      - postgres_storage:/var/lib/postgresql/data
-    healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -h localhost -U ${POSTGRES_USER} -d ${POSTGRES_DB}']
-      interval: 5s
-      timeout: 5s
-      retries: 10
-
-  n8n-import:
-    <<: *service-n8n
-    hostname: n8n-import
-    container_name: n8n-import
-    entrypoint: /bin/sh
-    command:
-    - "-c"
-    - |
-      if [ -z "$(n8n list:workflow --onlyId)" ]; then
-        n8n import:credentials --separate --input=/demo-data/credentials && \
-        n8n import:workflow --separate --input=/demo-data/workflows
-      else
-        echo "Workflows exist, skipping import"
-      fi
-    volumes:
-      - ./n8n/demo-data:/demo-data
-    depends_on:
-      postgres:
-        condition: service_healthy
-
   n8n:
-    <<: *service-n8n
-    hostname: n8n
+    image: n8nio/n8n:latest
     container_name: n8n
     restart: unless-stopped
     ports:
-      - 5678:5678
+      - "5678:5678"
     volumes:
-      - n8n_storage:/home/node/.n8n
-      - ./n8n/demo-data:/demo-data
-      - ./shared:/data/shared
+      - ./n8n_data:/home/node/.n8n
+    environment:
+      N8N_HOST: localhost
+      N8N_PORT: 5678
+      N8N_PROTOCOL: http
+      # It's highly recommended to set a strong encryption key in your .env file.
+      # For production, ensure this key is securely managed.
+      N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY}
+      GENERIC_TIMEZONE: Europe/Berlin
+      # Example for database connection - ensure these are set in .env
+      DB_TYPE: postgresdb
+      DB_POSTGRESDB_HOST: postgres
+      DB_POSTGRESDB_PORT: 5432
+      DB_POSTGRESDB_DATABASE: n8n
+      DB_POSTGRESDB_USER: ${POSTGRES_USER}
+      DB_POSTGRESDB_PASSWORD: ${POSTGRES_PASSWORD}
     depends_on:
-      postgres:
-        condition: service_healthy
-      n8n-import:
-        condition: service_completed_successfully
+      - postgres
+      - qdrant
+    networks:
+      - n8n_default_network
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    restart: unless-stopped
+    # Ollama exposes 11434 by default. Port mapping is useful for host access.
+    ports:
+      - "11434:11434"
+    volumes:
+      - ./ollama_data:/root/.ollama
+    environment:
+      # Make Ollama listen on all interfaces within the container
+      OLLAMA_HOST: 0.0.0.0
+      # OLLAMA_MODELS: llama3:8b # Uncomment to pre-pull a model on startup
+    # Profiles allow conditional service startup (e.g., for GPU vs. CPU)
+    profiles:
+      - gpu-nvidia
+      - gpu-amd
+      - cpu
+    # Example for GPU support (uncomment and adjust for your specific setup)
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
+    networks:
+      - n8n_default_network
+
+  barewire:
+    image: ghcr.io/barewire/proxy:latest
+    container_name: barewire
+    restart: unless-stopped
+    environment:
+      # Barewire will proxy requests to the Ollama service within the Docker network
+      BAREWIRE_UPSTREAM_URL: http://ollama:11434
+      # Your Barewire API Key for advanced features like tenant identification,
+      # analytics, and potentially cloud integrations. Get one from Barewire.
+      BAREWIRE_API_KEY: ${BAREWIRE_API_KEY}
+      # Uncomment for basic Barewire authentication if needed
+      # BAREWIRE_API_KEY_HEADER: X-API-Key
+      # Other Barewire configurations for features like rate limiting, compliance, etc.
+    ports:
+      # Expose Barewire proxy on host port 8080. N8N will connect to this port.
+      - "8080:8080"
+    depends_on:
+      - ollama # Barewire needs Ollama to be running to proxy requests
+    networks:
+      - n8n_default_network
 
   qdrant:
-    image: qdrant/qdrant
-    hostname: qdrant
+    image: qdrant/qdrant:latest
     container_name: qdrant
-    networks: ['demo']
     restart: unless-stopped
     ports:
-      - 6333:6333
+      - "6333:6333" # gRPC port
+      - "6334:6334" # REST port
     volumes:
-      - qdrant_storage:/qdrant/storage
+      - ./qdrant_data:/qdrant/data
+    networks:
+      - n8n_default_network
 
-  ollama-cpu:
-    profiles: ["cpu"]
-    <<: *service-ollama
+  postgres:
+    image: postgres:15
+    container_name: postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: n8n
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./postgres_data:/var/lib/postgresql/data
+    networks:
+      - n8n_default_network
 
-  ollama-gpu:
-    profiles: ["gpu-nvidia"]
-    <<: *service-ollama
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
-
-  ollama-gpu-amd:
-    profiles: ["gpu-amd"]
-    <<: *service-ollama
-    image: ollama/ollama:rocm
-    devices:
-      - "/dev/kfd"
-      - "/dev/dri"
-
-  ollama-pull-llama-cpu:
-    profiles: ["cpu"]
-    <<: *init-ollama
-    depends_on:
-      - ollama-cpu
-
-  ollama-pull-llama-gpu:
-    profiles: ["gpu-nvidia"]
-    <<: *init-ollama
-    depends_on:
-      - ollama-gpu
-
-  ollama-pull-llama-gpu-amd:
-    profiles: [gpu-amd]
-    <<: *init-ollama
-    image: ollama/ollama:rocm
-    depends_on:
-     - ollama-gpu-amd
+networks:
+  n8n_default_network:
+    driver: bridge
