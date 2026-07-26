@@ -30,21 +30,26 @@
     },
     {
       "parameters": {
-        "model": "llama3.2:latest",
+        "model": {
+          "__rl": true,
+          "value": "llama3.2",
+          "mode": "id"
+        },
+        "responsesApiEnabled": false,
         "options": {}
       },
       "id": "3dee878b-d748-4829-ac0a-cfd6705d31e5",
-      "name": "Ollama Chat Model",
-      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
-      "typeVersion": 1,
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
       "position": [
         900,
         560
       ],
       "credentials": {
-        "ollamaApi": {
+        "openAiApi": {
           "id": "xHuYe0MDGOs9IpBW",
-          "name": "Local Ollama service"
+          "name": "Local OpenAI-compatible service"
         }
       }
     }
@@ -61,7 +66,7 @@
         ]
       ]
     },
-    "Ollama Chat Model": {
+    "OpenAI Chat Model": {
       "ai_languageModel": [
         [
           {

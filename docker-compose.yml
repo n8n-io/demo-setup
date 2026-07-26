@@ -2,6 +2,8 @@ volumes:
   n8n_storage:
   postgres_storage:
   ollama_storage:
+  localai_models:
+  localai_data:
   qdrant_storage:
 
 networks:
@@ -27,7 +29,10 @@ x-n8n: &service-n8n
 x-ollama: &service-ollama
   image: ollama/ollama:latest
   container_name: ollama
-  networks: ['demo']
+  networks:
+    demo:
+      aliases:
+        - inference
   restart: unless-stopped
   ports:
     - 11434:11434
@@ -135,6 +140,36 @@ services:
     devices:
       - "/dev/kfd"
       - "/dev/dri"
+
+  localai-intel:
+    profiles: ["gpu-intel"]
+    image: localai/localai:v4.7.1-gpu-intel
+    container_name: localai-intel
+    networks:
+      demo:
+        aliases:
+          - inference
+    restart: unless-stopped
+    ports:
+      - 11434:11434
+    devices:
+      - "/dev/dri:/dev/dri"
+    environment:
+      LOCALAI_ADDRESS: ":11434"
+      LOCALAI_MODELS_PATH: /models
+      LOCALAI_DATA_PATH: /data
+      LOCALAI_F16: "true"
+      LOCALAI_THREADS: "1"
+    volumes:
+      - localai_models:/models
+      - localai_data:/data
+      - ./localai/models/llama3.2.yaml:/models/llama3.2.yaml:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/readyz"]
+      interval: 30s
+      timeout: 10s
+      retries: 20
+      start_period: 10m
 
   ollama-pull-llama-cpu:
     profiles: ["cpu"]

@@ -1,0 +1,11 @@
+name: llama3.2
+backend: llama-cpp
+parameters:
+  model: ollama://llama3.2
+context_size: 4096
+threads: 1
+f16: true
+gpu_layers: 999
+# Intel SYCL can hang with mmap enabled.
+mmap: false
+description: Llama 3.2 served by LocalAI on Intel GPU

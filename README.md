@@ -16,8 +16,11 @@ quickly get started with building self-hosted AI workflows.
 ✅ [**Self-hosted n8n**](https://n8n.io/) - Low-code platform with over 400
 integrations and advanced AI components
 
-✅ [**Ollama**](https://ollama.com/) - Cross-platform LLM platform to install
-and run the latest local LLMs
+✅ [**Ollama**](https://ollama.com/) - Cross-platform LLM platform used by the
+CPU, Nvidia, and AMD profiles
+
+✅ [**LocalAI**](https://localai.io/) - OpenAI-compatible local AI runtime used
+by the Intel GPU profile
 
 ✅ [**Qdrant**](https://qdrant.tech/) - Open-source, high performance vector
 store with an comprehensive API
@@ -90,16 +93,42 @@ cp .env.example .env # you should update secrets and passwords inside
 docker compose up
 ```
 
-##### For Mac users running OLLAMA locally
+##### For Mac users running Ollama locally
 
-If you're running OLLAMA locally on your Mac (not in Docker), you need to modify the OLLAMA_HOST environment variable
+After you see "Editor is now accessible via: <http://localhost:5678/>":
 
-1. Set OLLAMA_HOST to `host.docker.internal:11434` in your .env file. 
-2. Additionally, after you see "Editor is now accessible via: <http://localhost:5678/>":
+1. Head to <http://localhost:5678/home/credentials>.
+2. Open "Local OpenAI-compatible service".
+3. Change its Base URL to `http://host.docker.internal:11434/v1`.
 
-    1. Head to <http://localhost:5678/home/credentials>
-    2. Click on "Local Ollama service"
-    3. Change the base URL to "http://host.docker.internal:11434/"
+#### For Intel GPU users
+
+The `gpu-intel` profile uses LocalAI's official Intel GPU image and its
+OpenAI-compatible `/v1` API. No OpenAI cloud account or external API key is
+required.
+
+```bash
+git clone https://github.com/n8n-io/self-hosted-ai-starter-kit.git
+cd self-hosted-ai-starter-kit
+cp .env.example .env # you should update secrets and passwords inside
+docker compose --profile gpu-intel up
+```
+
+The host must expose `/dev/dri/renderD128`. The profile passes `/dev/dri` into
+`localai/localai:v4.7.1-gpu-intel`, persists model data, and serves the included
+`llama3.2` definition on port `11434`.
+
+Verify the API and GPU device:
+
+```bash
+curl --fail http://localhost:11434/readyz
+curl --fail http://localhost:11434/v1/models
+docker compose exec localai-intel test -e /dev/dri/renderD128
+```
+
+Readiness proves that LocalAI is serving. Confirm Intel offload separately in
+the LocalAI logs. The bundled workflow remains a Basic LLM Chain and does not
+claim agent or tool-calling compatibility.
 
 #### For everyone else
 
@@ -121,8 +150,8 @@ After completing the installation steps above, simply follow the steps below to 
    <http://localhost:5678/workflow/srOnR8PAY3u4RSwb>
 3. Click the **Chat** button at the bottom of the canvas, to start running the workflow.
 4. If this is the first time you’re running the workflow, you may need to wait
-   until Ollama finishes downloading Llama3.2. You can inspect the docker
-   console logs to check on the progress.
+   until the selected inference runtime finishes downloading Llama3.2. You can
+   inspect the Docker console logs to check on the progress.
 
 To open n8n at any time, visit <http://localhost:5678/> in your browser.
 
@@ -131,8 +160,8 @@ suite of basic and advanced AI nodes such as
 [AI Agent](https://docs.n8n.io/integrations/builtin/cluster-nodes/root-nodes/n8n-nodes-langchain.agent/),
 [Text classifier](https://docs.n8n.io/integrations/builtin/cluster-nodes/root-nodes/n8n-nodes-langchain.text-classifier/),
 and [Information Extractor](https://docs.n8n.io/integrations/builtin/cluster-nodes/root-nodes/n8n-nodes-langchain.information-extractor/)
-nodes. To keep everything local, just remember to use the Ollama node for your
-language model and Qdrant as your vector store.
+nodes. The bundled workflow uses the OpenAI Chat Model against the selected
+local inference runtime and Qdrant as its vector store.
 
 > [!NOTE]
 > This starter kit is designed to help you get started with self-hosted AI
@@ -154,6 +183,13 @@ docker compose create && docker compose --profile gpu-nvidia up
 ```bash
 docker compose pull
 docker compose create && docker compose up
+```
+
+* ### For Intel GPU setups:
+
+```bash
+docker compose --profile gpu-intel pull
+docker compose create && docker compose --profile gpu-intel up
 ```
 
 * ### For Non-GPU setups:
