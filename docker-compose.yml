@@ -19,6 +19,10 @@ x-n8n: &service-n8n
     - N8N_PERSONALIZATION_ENABLED=false
     - N8N_ENCRYPTION_KEY
     - N8N_USER_MANAGEMENT_JWT_SECRET
+    - N8N_RUNNERS_MODE=external
+    - N8N_RUNNERS_BROKER_LISTEN_ADDRESS=0.0.0.0
+    - N8N_RUNNERS_AUTH_TOKEN=${N8N_RUNNERS_AUTH_TOKEN:-a-shared-secret-between-n8n-and-the-runners}
+    - N8N_NATIVE_PYTHON_RUNNER=true
     - OLLAMA_HOST=${OLLAMA_HOST:-ollama:11434}
   env_file:
     - path: .env
@@ -101,6 +105,18 @@ services:
         condition: service_healthy
       n8n-import:
         condition: service_completed_successfully
+
+  n8n-runners:
+    image: n8nio/runners:latest
+    hostname: n8n-runners
+    container_name: n8n-runners
+    networks: ['demo']
+    restart: unless-stopped
+    environment:
+      - N8N_RUNNERS_TASK_BROKER_URI=http://n8n:5679
+      - N8N_RUNNERS_AUTH_TOKEN=${N8N_RUNNERS_AUTH_TOKEN:-a-shared-secret-between-n8n-and-the-runners}
+    depends_on:
+      - n8n
 
   qdrant:
     image: qdrant/qdrant
